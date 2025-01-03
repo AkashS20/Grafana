@@ -40,7 +40,13 @@ pipeline {
         stage('Run Application') {
             steps {
                 // Run your application in a Docker container
-                sh 'docker run -d -p 8005:8005 --name delivery_metrics delivery_metrics'
+                sh '''
+                    # Stop and remove existing container if it exists
+                    docker rm -f delivery_metrics || true
+                    
+                    # Run new container
+                    docker run -d -p 8005:8005 --name delivery_metrics delivery_metrics
+                '''
             }
         }
         stage('Run Prometheus & Grafana') {
