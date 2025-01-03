@@ -69,6 +69,36 @@ pipeline {
                 '''
             }
         }
+        stage('Cleanup') {
+            steps {
+                script {
+                    // Stop and remove containers if they exist
+                    sh '''
+                        docker rm -f prometheus || true
+                        docker rm -f grafana || true
+                        docker rm -f delivery_metrics || true
+                        
+                        # Optionally remove unused images
+                        docker image prune -f
+                        
+                        # Optionally remove unused volumes
+                        docker volume prune -f
+                    '''
+                }
+            }
+        }
+    }
+    
+    // Post-build actions
+    post {
+        always {
+            // This will run even if the pipeline fails
+            sh '''
+                docker rm -f prometheus || true
+                docker rm -f grafana || true
+                docker rm -f delivery_metrics || true
+            '''
+        }
     }
 }
 
