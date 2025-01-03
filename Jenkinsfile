@@ -51,13 +51,21 @@ pipeline {
         }
         stage('Run Prometheus & Grafana') {
             steps {
-                // Run Prometheus with the configuration files from the repository
                 sh '''
-                docker run -d --name prometheus -p 9095:9095 \
-                  -v $WORKSPACE/prometheus.yml:/etc/prometheus/prometheus.yml \
-                  -v $WORKSPACE/alert_rules.yml:/etc/prometheus/alert_rules.yml \
-                  prom/prometheus
-                docker run -d --name grafana -p 3005:3005 grafana/grafana
+                    # Stop and remove existing Prometheus container if it exists
+                    docker rm -f prometheus || true
+                    
+                    # Run new Prometheus container
+                    docker run -d --name prometheus -p 9095:9095 \
+                    -v /var/lib/jenkins/workspace/Grafana/prometheus.yml:/etc/prometheus/prometheus.yml \
+                    -v /var/lib/jenkins/workspace/Grafana/alert_rules.yml:/etc/prometheus/alert_rules.yml \
+                    prom/prometheus
+
+                    # Stop and remove existing Grafana container if it exists
+                    docker rm -f grafana || true
+                    
+                    # Run new Grafana container
+                    docker run -d --name grafana -p 3000:3000 grafana/grafana
                 '''
             }
         }
